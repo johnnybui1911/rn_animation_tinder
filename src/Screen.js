@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react'
-import { SafeAreaView, View, StyleSheet, AsyncStorage, ActivityIndicator } from 'react-native'
+import { SafeAreaView, View, StyleSheet, AsyncStorage } from 'react-native'
 import { PanGestureHandler, State } from 'react-native-gesture-handler'
 import axios from 'axios'
 import moment from 'moment'
