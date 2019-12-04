@@ -1,13 +1,14 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react'
-import { SafeAreaView, View, StyleSheet, AsyncStorage, StatusBar } from 'react-native'
+import { SafeAreaView, View, StyleSheet, AsyncStorage, ActivityIndicator } from 'react-native'
 import { PanGestureHandler, State } from 'react-native-gesture-handler'
 import axios from 'axios'
 import moment from 'moment'
 import Animated from 'react-native-reanimated'
+import { BarIndicator } from 'react-native-indicators'
 import styles from './styles'
 import { Card } from './Card'
-import { SCREEN_WIDTH, runSpring, SCREEN_HEIGHT, API_URL, titleCase, palette } from './constants'
+import { SCREEN_WIDTH, runSpring, SCREEN_HEIGHT, API_URL, titleCase, palette, TRANSLATION_THRESHOLD } from './constants'
 
 const {
   add,
@@ -59,11 +60,11 @@ export default class Screen extends React.PureComponent {
   }
 
   state = {
-    profile: null,
-    likeList: []
+    profile: null
   }
 
   componentDidMount = () => {
+    // check the offline like list stored in async storage
     AsyncStorage.getItem('LIKELIST').then(res => {
       console.log(JSON.parse(res))
     })
@@ -104,6 +105,7 @@ export default class Screen extends React.PureComponent {
 
   _initTinderCard = () => {
     const { translationX, velocityX, translationY, gestureState, offsetX, offsetY } = this
+    // re-initialize config to default value
     gestureState.setValue(State.UNDETERMINED)
     translationX.setValue(0)
     translationY.setValue(0)
@@ -115,14 +117,15 @@ export default class Screen extends React.PureComponent {
     const clockY = new Clock()
 
     const finalTranslateX = add(translationX, multiply(0.2, velocityX))
-    const translationThreshold = SCREEN_WIDTH / 4
 
+    // setting snapPoint for below condition
     const snapPoint = cond(
-      lessThan(finalTranslateX, -translationThreshold),
+      lessThan(finalTranslateX, -TRANSLATION_THRESHOLD),
       -ROTATE_WIDTH,
-      cond(greaterThan(finalTranslateX, translationThreshold), ROTATE_WIDTH, 0)
+      cond(greaterThan(finalTranslateX, TRANSLATION_THRESHOLD), ROTATE_WIDTH, 0)
     )
 
+    // check the condition and make animation for translateX
     this.translateX = cond(
       eq(gestureState, State.END),
       [
@@ -134,6 +137,7 @@ export default class Screen extends React.PureComponent {
       cond(eq(gestureState, State.BEGAN), [stopClock(clockX), translationX], translationX)
     )
 
+    // check the condition and make animation for translateY
     this.translateY = cond(
       eq(gestureState, State.END),
       [set(translationY, runSpring(clockY, translationY, 0)), set(offsetY, translationY), translationY],
@@ -141,17 +145,18 @@ export default class Screen extends React.PureComponent {
     )
   }
 
+  // function handle swipe card to left/right
   _onSwiped = ([translateX]) => {
-    const { likeList, profile } = this.state
-    const isLiked = translateX > 0
+    const { profile } = this.state
+    const isLiked = translateX > 0 // translateX > 0 -> user swiped card to the right
     if (isLiked) {
-      this.setState({ likeList: [...likeList, profile] })
-      this._storeLikeList(profile)
+      this._storeLikeList(profile) // store the liked card into offline list
     }
-    this.fetchProfile()
-    this._initTinderCard()
+    this.fetchProfile() // fetch new random profile
+    this._initTinderCard() // re-initialize the animation configuration of card view
   }
 
+  // function store the liked profile into like list in async storage
   _storeLikeList = async newProfile => {
     let likeList = []
     try {
@@ -170,6 +175,7 @@ export default class Screen extends React.PureComponent {
     const { profile } = this.state
     const { translateX, translateY, onGestureEvent } = this
 
+    // interpolate translateX to get corresponding rotateZ -> similar to Tinder App
     const rotateZ = concat(
       interpolate(translateX, {
         inputRange: [-SCREEN_WIDTH / 2, SCREEN_WIDTH / 2],
@@ -187,20 +193,33 @@ export default class Screen extends React.PureComponent {
       outputRange: [1, 0]
     })
 
+    // animated style for Animated View
     const style = {
       ...StyleSheet.absoluteFillObject,
-      zIndex: 900,
+      zIndex: 500,
       transform: [{ translateX }, { translateY }, { rotateZ }]
     }
     return (
       <SafeAreaView style={styles.rootContainer}>
         <View style={styles.rootHeader} />
         <View style={styles.cardContainer}>
-          <PanGestureHandler onHandlerStateChange={onGestureEvent} onGestureEvent={onGestureEvent}>
-            <Animated.View {...{ style }}>
-              <Card {...{ profile, likeOpacity, nopeOpacity }} />
-            </Animated.View>
-          </PanGestureHandler>
+          {profile ? (
+            <PanGestureHandler onHandlerStateChange={onGestureEvent} onGestureEvent={onGestureEvent}>
+              <Animated.View {...{ style }}>
+                <Card {...{ profile, likeOpacity, nopeOpacity }} />
+              </Animated.View>
+            </PanGestureHandler>
+          ) : (
+            <View
+              style={{
+                ...StyleSheet.absoluteFill,
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              <BarIndicator size={40} color={palette.GREEN} count={6} />
+            </View>
+          )}
         </View>
       </SafeAreaView>
     )

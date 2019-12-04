@@ -4,6 +4,7 @@ import { FontAwesome } from '@expo/vector-icons'
 import { palette } from './constants'
 import styles from './styles'
 
+// Custome Icon with Line above chosen icon
 export function CustomIcon({ item, index, option }) {
   return (
     <View style={{ alignItems: 'center' }}>

@@ -7,6 +7,7 @@ export const API_URL = 'https://randomuser.me/api/0.4/?randomapi'
 
 export const SCREEN_WIDTH = Dimensions.get('window').width
 export const SCREEN_HEIGHT = Dimensions.get('window').height
+export const TRANSLATION_THRESHOLD = SCREEN_WIDTH / 4
 
 export const palette = {
   WHITE: '#FFF',

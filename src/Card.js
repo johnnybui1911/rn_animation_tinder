@@ -62,6 +62,7 @@ export function Card({ profile, likeOpacity, nopeOpacity }) {
         </Animated.View>
       </View>
       <View style={styles.lowerCard}>
+        {/* Render header with profile image */}
         <View style={styles.header}>
           <View style={styles.personImage}>
             <View style={styles.imageContainer}>
@@ -76,8 +77,10 @@ export function Card({ profile, likeOpacity, nopeOpacity }) {
             </View>
           </View>
         </View>
+        {/* Render body part */}
         {renderContent()}
         <View style={styles.footer}>
+          {/* Render icon list */}
           {['user-o', 'calendar', 'map', 'phone', 'lock'].map((item, index) => (
             <TouchableOpacity key={item} onPress={() => handlePressIcon(index)} style={{ padding: 12 }}>
               <CustomIcon {...{ item, index, option }} />
